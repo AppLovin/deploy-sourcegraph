@@ -24,7 +24,7 @@ spec:
         deploy: sourcegraph
     spec:
       containers:
-      - image: index.docker.io/sourcegraph/grafana:insiders@sha256:6ff8660e4476b56423038c0ff0cb7fceeb4dc5986accc1c28d823156f23d22d2
+      - image: index.docker.io/sourcegraph/grafana:insiders@sha256:5518c76dae9d21ce653eb820b6bbb191f5ad594bd5ae22d220337c6cb68438f1
         terminationMessagePolicy: FallbackToLogsOnError
         name: grafana
         ports:
