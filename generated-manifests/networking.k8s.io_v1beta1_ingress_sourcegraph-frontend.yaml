@@ -1,0 +1,21 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx-internal
+    nginx.ingress.kubernetes.io/proxy-body-size: 150m
+  labels:
+    app: sourcegraph-frontend
+    app.kubernetes.io/component: frontend
+    deploy: sourcegraph
+    sourcegraph-resource-requires: no-cluster-admin
+  name: sourcegraph-frontend
+spec:
+  rules:
+  - host: cbf2-sourcegraph.alcfd.com
+    http:
+      paths:
+      - backend:
+          serviceName: sourcegraph-frontend
+          servicePort: 30080
+        path: /

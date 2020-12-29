@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    description: Postgres database for various data.
+  labels:
+    app.kubernetes.io/component: pgsql
+    deploy: sourcegraph
+    sourcegraph-resource-requires: no-cluster-admin
+  name: pgsql
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: pgsql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: pgsql
+        deploy: sourcegraph
+        group: backend
+    spec:
+      containers:
+      - image: index.docker.io/sourcegraph/postgres-11.4:insiders@sha256:a55fea6638d478c2368c227d06a1a2b7a2056b693967628427d41c92d9209e97
+        livenessProbe:
+          exec:
+            command:
+            - /liveness.sh
+          initialDelaySeconds: 15
+        name: pgsql
+        ports:
+        - containerPort: 5432
+          name: pgsql
+        readinessProbe:
+          exec:
+            command:
+            - /ready.sh
+        resources:
+          limits:
+            cpu: "4"
+            memory: 2Gi
+          requests:
+            cpu: "4"
+            memory: 2Gi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsGroup: 999
+          runAsUser: 999
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /data
+          name: disk
+        - mountPath: /conf
+          name: pgsql-conf
+      - env:
+        - name: DATA_SOURCE_NAME
+          value: postgres://sg:@localhost:5432/?sslmode=disable
+        image: wrouesnel/postgres_exporter:v0.7.0@sha256:785c919627c06f540d515aac88b7966f352403f73e931e70dc2cbf783146a98b
+        name: pgsql-exporter
+        resources:
+          limits:
+            cpu: 10m
+            memory: 50Mi
+          requests:
+            cpu: 10m
+            memory: 50Mi
+        terminationMessagePolicy: FallbackToLogsOnError
+      initContainers:
+      - command:
+        - sh
+        - -c
+        - if [ -d /data/pgdata-11 ]; then chmod 750 /data/pgdata-11; fi
+        image: sourcegraph/alpine:3.12@sha256:133a0a767b836cf86a011101995641cf1b5cbefb3dd212d78d7be145adde636d
+        name: correct-data-dir-permissions
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsGroup: 999
+          runAsUser: 999
+        volumeMounts:
+        - mountPath: /data
+          name: disk
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+      volumes:
+      - name: disk
+        persistentVolumeClaim:
+          claimName: pgsql
+      - configMap:
+          defaultMode: 511
+          name: pgsql-conf
+        name: pgsql-conf
