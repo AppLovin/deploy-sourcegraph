@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+annotations:
+  recipients.argocd-notifications.argoproj.io: slack:devops
+metadata:
+  name: cbf2-cluster1-sourcegraph
+  # You'll usually want to add your resources to the argocd namespace.
+  namespace: argocd
+  # Add a this finalizer ONLY if you want these to cascade delete.
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # The project the application belongs to.
+  project: sourcegraph
+
+  # Source of the application manifests
+  source:
+    repoURL: git@github.com:AppLovin/deploy-sourcegraph.git
+    targetRevision: master
+    path: deploy/cbf2-cluster1/sourcegraph
+
+  # Destination cluster and namespace to deploy the application
+  destination:
+    server: https://kubernetes.default.svc # cbf2-cluster1
+    namespace: sourcegraph

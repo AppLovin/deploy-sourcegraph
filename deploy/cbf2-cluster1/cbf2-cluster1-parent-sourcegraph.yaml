@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cbf2-cluster1-parent-sourcegraph
+  namespace: argocd
+spec:
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc # cbf2-cluster1
+  project: sourcegraph
+  source:
+    path: deploy/cbf2-cluster1/
+    repoURL: git@github.com:AppLovin/deploy-sourcegraph.git
+    targetRevision: master
